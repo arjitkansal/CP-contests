@@ -1,6 +1,6 @@
 .git
-*/template_cpp.cpp
+**/template_cpp.cpp
 !template_folder/template_cpp.cpp
-*/*.txt
-*/*.out
-*/*.sh
+**/*.txt
+**/*.out
+**/*.sh
