@@ -84,50 +84,27 @@ void add_to_trieDS(int val) {
   trieDS[node_index].cnt++;
 }
 
-void remove_from_trieDS(int val) {
-  int bit = 0;
-  int node_index = root;
-  REPN(i,logN,0) {
-    bit = (val>>i) & 1;
-    trieDS[node_index].cnt--;
-    assert(trieDS[node_index].next_node[bit] > 0);
-    node_index = trieDS[node_index].next_node[bit];
+int dfs(int i) {
+  if(trieDS[i].cnt < 2) {
+    return 0;
   }
-  trieDS[node_index].cnt--;
-}
-
-int get_value_with_min_xor(int val) {
-  int ret = 0;
-  int bit = 0;
-  int node_index = root, index_with_same_bit;
-  REPN(i,logN,0) {
-    bit = (val>>i) & 1;
-    index_with_same_bit = trieDS[node_index].next_node[bit];
-    if(trieDS[index_with_same_bit].cnt > 0) {
-      node_index = index_with_same_bit;
-      if(bit) ret += (1<<i);
-    }
-    else {
-      node_index = trieDS[node_index].next_node[1-bit];
-      if(!bit) ret += (1<<i);
-    }
+  else if(trieDS[i].next_node[0] && trieDS[i].next_node[1]) {
+    int good_0 = dfs(trieDS[i].next_node[0]);
+    int good_1 = dfs(trieDS[i].next_node[1]);
+    int req_deletion_0 = (trieDS[trieDS[i].next_node[0]].cnt >= 2) ? (trieDS[trieDS[i].next_node[0]].cnt - 1) : 0;
+    int req_deletion_1 = (trieDS[trieDS[i].next_node[1]].cnt >= 2) ? (trieDS[trieDS[i].next_node[1]].cnt - 1) : 0;
+    return min(req_deletion_0 + good_1, req_deletion_1 + good_0);
   }
-  return ret;
-}
-
-int double_edges = 0;
-map<pi,bool> edges;
-void add_edge(int i, int j) {
-  assert(i!=j);
-  if(i>j) {
-    swap(i,j);
+  else if(trieDS[i].next_node[0]) {
+    return dfs(trieDS[i].next_node[0]);
   }
-  if(edges.count(make_pair(i,j))) {
-    double_edges++;
+  else if(trieDS[i].next_node[1]) {
+    return dfs(trieDS[i].next_node[1]);
   }
   else {
-    edges[make_pair(i,j)] = true;
+    return 0;
   }
+  return INT_MAX;
 }
 
 int a[N];
@@ -138,14 +115,7 @@ void solve() {
     cin >> a[i];
     add_to_trieDS(a[i]);
   }
-  REP(i,1,n) {
-    remove_from_trieDS(a[i]);
-    int val = get_value_with_min_xor(a[i]);
-    add_edge(val,a[i]);
-    add_to_trieDS(a[i]);
-  }
-  assert(double_edges != 0);
-  cout << (double_edges - 1);
+  cout << dfs(root);
 }
 
 int main() {
