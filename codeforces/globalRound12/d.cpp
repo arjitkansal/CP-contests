@@ -63,14 +63,13 @@ const int Q = 301;
 const int logN = 19;
 
 int a[N], freq[N];
-bool ans[N], middle[N];
+bool ans[N];
 void solve() {
     int n;
     cin >> n;
 
     bool array_distinct = true;
     REP(i,1,n) {
-      middle[i] = false;
       freq[i] = 0;
     }
     REP(i,1,n) {

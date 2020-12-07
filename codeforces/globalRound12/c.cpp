@@ -62,7 +62,7 @@ const int M = (int)3e3+5;
 const int Q = 301;
 const int logN = 19;
 
-string s[Q];
+string s[Q], t[Q];
 void solve() {
     int n;
     cin >> n;
@@ -75,19 +75,32 @@ void solve() {
         }
       }
     }
-    // cout << k << "\n";
-    int moves = 0;
-    REP(i,0,n-1) {
-      for(int j = i%3; j<=n-1; j+= 3) {
-        if(s[i][j] == 'X') {
-          moves++;
-          s[i][j] = 'O';
+
+    bool valid_permutation_exists = false;
+    vector<int> order = {0,1,2};
+    do {
+      REP(i,0,n-1) {
+        t[i] = s[i];
+      }
+      int moves = 0;
+      REP(i,0,n-1) {
+        for(int j = order[i%3]; j<=n-1; j+= 3) {
+          if(s[i][j] == 'X') {
+            moves++;
+            s[i][j] = 'O';
+          }
         }
       }
-    }
-    // cout << moves << "\n";
-    // return;
-    assert(moves <= k/3);
+      if(moves <= k/3) {
+        valid_permutation_exists = true;
+        break;
+      }
+      REP(i,0,n-1) {
+        s[i] = t[i];
+      }
+    } while(next_permutation(all(order)));
+
+    assert(valid_permutation_exists);
     REP(i,0,n-1) {
       cout << s[i] << "\n";
     }
