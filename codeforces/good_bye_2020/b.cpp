@@ -25,7 +25,6 @@ typedef pair<int,pair<int,int> > pii;
 typedef pair<double,double> pdd;
 typedef tree<int,null_type,less<int>,rb_tree_tag,tree_order_statistics_node_update> indexed_set;
 ll power(ll a,ll b) {
-   a %= mod;
    ll res=1;
    while(b){
       if(b%2==1) res=(res*a)%mod;
@@ -63,8 +62,27 @@ const int M = (int)3e3+5;
 const int Q = 301;
 const int logN = 19;
 
+set<int> used;
 void solve() {
-
+  used.clear();
+  int n;
+  cin >> n;
+  vector<int> x(n);
+  REP(i,0,n-1) {
+    cin >> x[i];
+  }
+  int ans = 0;
+  REP(i,0,n-1) {
+    if(!used.count(x[i])) {
+      ans++;
+      used.insert(x[i]);
+    }
+    else if(!used.count(x[i]+1)){
+      ans++;
+      used.insert(x[i]+1);
+    }
+  }
+  cout << ans;
 }
 int main() {
     //freopen("output.txt","r",stdin);

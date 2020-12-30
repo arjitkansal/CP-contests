@@ -58,13 +58,56 @@ struct custom_hash {
     }
 };
 
-const int N = (int)2e5+5;
+const int N = (int)5e5+5;
 const int M = (int)3e3+5;
 const int Q = 301;
 const int logN = 19;
 
+int cnt[60];
+ll a[N];
+ll calc_bitwise_or_sum(ll v, int n) {
+  ll ret = 0;
+  REP(j,0,59) {
+    if((v>>j)&1) {
+      ret = (ret + ((1LL<<j) % mod) * (n-1)) % mod;
+    }
+    else {
+      ret = (ret + ((1LL<<j) % mod) * cnt[j]) % mod;
+    }
+  }
+  return ret;
+}
+ll calc_bitwise_and_sum(ll v, int n) {
+  ll ret = 0;
+  REP(j,0,59) {
+    if((v>>j)&1) {
+      ret = (ret + ((1LL<<j) % mod) * (cnt[j]-1)) % mod;
+    }
+  }
+  return ret;
+}
 void solve() {
-
+    int n;
+    cin >> n;
+    mms(cnt,0);
+    REP(i,1,n) {
+      cin >> a[i];
+      REP(j,0,59) {
+        if((a[i]>>j)&1) {
+          cnt[j]++;
+        }
+      }
+    }
+    ll ans = 0;
+    REP(i,1,n) {
+      ll or_sum = calc_bitwise_or_sum(a[i],n);
+      ll and_sum = calc_bitwise_and_sum(a[i],n);
+      ans = (ans + or_sum * and_sum) % mod;
+      ans = (ans + power(a[i]%mod,2)) % mod;
+      ans = (ans + (a[i] % mod) * or_sum) % mod;
+      ans = (ans + (a[i] % mod) * and_sum) % mod;
+    }
+    cout << ans;
 }
 int main() {
     //freopen("output.txt","r",stdin);

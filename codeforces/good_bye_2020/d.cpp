@@ -25,7 +25,6 @@ typedef pair<int,pair<int,int> > pii;
 typedef pair<double,double> pdd;
 typedef tree<int,null_type,less<int>,rb_tree_tag,tree_order_statistics_node_update> indexed_set;
 ll power(ll a,ll b) {
-   a %= mod;
    ll res=1;
    while(b){
       if(b%2==1) res=(res*a)%mod;
@@ -58,13 +57,57 @@ struct custom_hash {
     }
 };
 
-const int N = (int)2e5+5;
+const int N = (int)1e5+5;
 const int M = (int)3e3+5;
 const int Q = 301;
 const int logN = 19;
 
+pi edge[N];
+int degree[N];
+ll w[N];
+multiset<pii> ms;
+ll findNext() {
+  if(ms.empty()) {
+    return 0;
+  }
+  auto it = ms.end();
+  it--;
+  pii temp = *it;
+  ms.erase(it);
+  int x = temp.second.first;
+  if(degree[x]>1) {
+    degree[x]--;
+    int ind = temp.second.second;
+    int y = edge[ind].first + edge[ind].second - x;
+    // degree[y]--;
+    it = ms.find({w[y],{y,ind}});
+    if(it!=ms.end()) ms.erase(it);
+    return temp.first;
+  }
+  return findNext();
+}
 void solve() {
-
+    ms.empty();
+    int n;
+    cin >> n;
+    ll ans = 0;
+    REP(i,1,n) {
+      cin >> w[i];
+      ans += w[i];
+      degree[i] = 0;
+    }
+    int x,y;
+    REP(i,1,n-1) {
+      cin >> x >> y;
+      edge[i] = {x,y};
+      degree[x]++, degree[y]++;
+      ms.insert({w[x],{x,i}});
+      ms.insert({w[y],{y,i}});
+    }
+    REP(i,1,n-1) {
+      cout << ans << " ";
+      ans += findNext();
+    }
 }
 int main() {
     //freopen("output.txt","r",stdin);

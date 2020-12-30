@@ -25,7 +25,6 @@ typedef pair<int,pair<int,int> > pii;
 typedef pair<double,double> pdd;
 typedef tree<int,null_type,less<int>,rb_tree_tag,tree_order_statistics_node_update> indexed_set;
 ll power(ll a,ll b) {
-   a %= mod;
    ll res=1;
    while(b){
       if(b%2==1) res=(res*a)%mod;
@@ -58,13 +57,57 @@ struct custom_hash {
     }
 };
 
-const int N = (int)2e5+5;
+const int N = (int)1e5+5;
 const int M = (int)3e3+5;
 const int Q = 301;
 const int logN = 19;
 
+int dp[N][2][2];
+string s;
 void solve() {
-
+    cin >> s;
+    int n = s.size();
+    if(n==1) {
+      cout << 0;
+      return;
+    }
+    else if(n==2){
+      cout << (s[0] == s[1]);
+      return;
+    }
+    s = "0" + s;
+    dp[1][0][0] = 0;
+    dp[1][0][1] = 1;
+    dp[1][1][0] = 1;
+    dp[1][1][1] = 2;
+    dp[2][0][0] = (s[1]==s[2]) ? 1e9 : 0;
+    dp[2][0][1] = 1;
+    dp[2][1][0] = 1;
+    dp[2][1][1] = 2;
+    REP(i,3,n) {
+      REP(j,0,1) {
+        REP(k,0,1) {
+          dp[i][j][k] = 1e9;
+          if(j || k || s[i] != s[i-1]) {
+              REP(a,0,1) {
+                REP(b,0,1) {
+                  if((a || j || s[i-3] != s[i-1]) && (b || ((j || s[i-2] != s[i-1]) && (k || s[i-2] != s[i])))) {
+                    dp[i][j][k] = min(dp[i][j][k], j + k+ dp[i-2][a][b]);
+                  }
+                }
+              }
+          }
+        }
+      }
+    }
+    int ans = 1e9;
+    REP(i,0,1) {
+      REP(j,0,1) {
+        ans = min(ans, dp[n][i][j]);
+      }
+    }
+    assert(ans < 1e9);
+    cout << ans;
 }
 int main() {
     //freopen("output.txt","r",stdin);
