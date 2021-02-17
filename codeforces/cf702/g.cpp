@@ -63,7 +63,8 @@ const int M = (int)3e3+5;
 const int Q = 301;
 const int logN = 19;
 
-ll a[N], x[N], max_pref[N];
+int a[N],x[N];
+ll max_pref[N];
 void solve() {
   int n,m;
   cin >> n >> m;
@@ -79,7 +80,7 @@ void solve() {
   REP(i,1,m) {
     cin >> x[i];
   }
-  if(prefix_sum <= 0) {
+  if(prefix_sum <= 0 || prefix_sum >= 1e9) {
     // Jo hoga, pehle cycle me hi hoga
     REP(i,1,m) {
       if(x[i] > max_prefix_sum) {
@@ -93,27 +94,12 @@ void solve() {
     return;
   }
   REP(i,1,m) {
-    ll cnt_cycles = 0;
-    {
-      // Counting the number of cycles
-      ll lo = 0, hi = 1e9, mi;
-      while(lo < hi) {
-        mi = (lo+hi)/2;
-        if(prefix_sum * mi + max_prefix_sum >= x[i]) {
-          hi = mi;
-        }
-        else {
-          lo = mi+1;
-        }
-      }
-      cnt_cycles = lo;
-    }
+    ll cnt_cycles = max(0LL, (x[i] - max_prefix_sum + prefix_sum - 1) / prefix_sum);
     ll offset = 0;
-    if(x[i] != cnt_cycles*prefix_sum) {
-      offset = lower_bound(max_pref+1, max_pref+n+1, x[i] - cnt_cycles*prefix_sum) - max_pref;
+    if(x[i] != cnt_cycles * prefix_sum) {
+      offset = lower_bound(max_pref+1, max_pref+n+1, x[i] - cnt_cycles * prefix_sum) - max_pref;
     }
-    cout << (n * cnt_cycles + offset) - 1;
-    cout << " ";
+    cout << (n * cnt_cycles + offset) - 1 << " ";
   }
 }
 int main() {
