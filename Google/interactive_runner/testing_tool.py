@@ -1,25 +1,14 @@
-# Usage: `local_testing_tool.py test_number`, where the argument test_number
-# is 0 (Test Set 1), 1 (Test Set 2) or 2 (Test Set 3).
+# Usage: `local_testing_tool.py [test_number]`, where test_number is ignored.
 
 import sys
 import random
 
-T = 100
-Ns = (10, 50, 50)
-Qs = (30000, 30000, 17000)
+N = 100
+MAX_COST = 6 * 10**8
 CORRECT, WRONG = 1, -1
 
-
-def GenCase(n):
-  r = list(range(1, n + 1))
-  # r = [2,3,4,1]
-  # r = [1,7,3,10,5,8,4,9,6,2]
-  random.shuffle(r)
-  return tuple(r)
-
-
-def GenCases(n):
-  return tuple(GenCase(n) for _ in range(T))
+CASES = [tuple(range(N // 2, N + 1)) + tuple(range(1, N // 2)),
+         tuple(range(1, N + 1)), tuple(range(N, 0, -1))]
 
 
 class Error(Exception):
@@ -32,17 +21,16 @@ class JudgeError(Exception):
 
 INVALID_LINE_ERROR = "Couldn't read a valid line"
 TOO_LONG_LINE_ERROR = "Line too long: {} characters".format
-WRONG_NUM_TOKENS_ERROR = "Wrong number of tokens, expected 3 or {} got {}".format
+WRONG_NUM_TOKENS_ERROR = "Wrong number of tokens, expected 1 or 3 got {}".format
 NOT_INTEGER_ERROR = "Not an integer: {}".format
 OUT_OF_BOUNDS_ERROR = "{} is out of bounds".format
-REPEATED_INTEGERS_ERROR = "Received repeated integers: {}".format
-TOO_MANY_QUERIES_ERROR = "Queried too many times"
-WRONG_ORDER_ERROR = "Guessed wrong order"
+WRONG_QUERY_ERROR = "Received wrong query: {}".format
+COST_LIMIT_EXCEEDED_ERROR = "Exceeded the cost limit"
+WRONG_ORDER_ERROR = "Did not sort the list"
 CASE_ERROR = "Case #{} failed: {}".format
 EXCEPTION_AFTER_END_ERROR = (
     "Exception raised while reading input after all cases finish.")
 ADDITIONAL_INPUT_ERROR = "Additional input after all cases finish: {}".format
-QUERIES_USED = "Total Queries Used: {}/{}".format
 
 
 def ParseInteger(line):
@@ -52,36 +40,26 @@ def ParseInteger(line):
     raise Error(NOT_INTEGER_ERROR(line))
 
 
-def ReadValues(n, line):
+def ReadValues(line):
   if len(line) > 1000:
     raise Error(TOO_LONG_LINE_ERROR(len(line)))
   parts = line.split()
-  if len(parts) not in (3, n):
-    raise Error(WRONG_NUM_TOKENS_ERROR(n, len(parts)))
-  v = tuple(ParseInteger(parts[i]) for i in range(len(parts)))
-  for vi in v:
-    if not 1 <= vi <= n:
+  if len(parts) not in (1, 3):
+    raise Error(WRONG_NUM_TOKENS_ERROR(len(parts)))
+  v = tuple([parts[0]] + [ParseInteger(parts[i]) for i in range(1, len(parts))])
+  if parts[0] not in ("D", "S", "M"):
+    raise Error(WRONG_QUERY_ERROR(line))
+  if parts[0] == "D" and len(v) != 1:
+    raise Error(WRONG_QUERY_ERROR(line))
+  if parts[0] in ("S", "M"):
+    if len(v) != 3:
+      raise Error(WRONG_QUERY_ERROR(line))
+    if v[1] >= v[2]:
+      raise Error(WRONG_QUERY_ERROR(line))
+  for vi in v[1:]:
+    if not 1 <= vi <= N:
       raise Error(OUT_OF_BOUNDS_ERROR(vi))
-  if len(set(v)) != len(v):
-    raise Error(REPEATED_INTEGERS_ERROR(v))
   return v
-
-
-def Inv(v):
-  r = list(v)
-  for i in range(len(r)):
-    r[v[i] - 1] = i + 1
-  return tuple(r)
-
-
-def Mid(pos, v):
-  if len(v) != 3:
-    raise JudgeError("Mid called with {} values (expected 3)".format(len(v)))
-  p = tuple(pos[vi - 1] for vi in v)
-  min_p, max_p = min(p), max(p)
-  for vi in v:
-    if pos[vi - 1] not in (min_p, max_p):
-      return vi
 
 
 def Output(line):
@@ -98,7 +76,7 @@ def Output(line):
       pass
 
 
-def RunCase(case, max_q):
+def RunCase(case):
 
   def Input():
     try:
@@ -106,28 +84,33 @@ def RunCase(case, max_q):
     except:
       raise Error(INVALID_LINE_ERROR)
 
-  pos = Inv(case)
-  q = 0
+  case = list(case)
+  n = len(case)
+  cost = 0
   while True:
-    v = ReadValues(len(case), Input())
-    if len(v) == len(case):
-      if v != case and v != tuple(reversed(case)):
+    v = ReadValues(Input())
+    if v[0] == "D":
+      if case != list(range(1, n + 1)):
         raise Error(WRONG_ORDER_ERROR)
-      return q
-    if q >= max_q:
-      raise Error(TOO_MANY_QUERIES_ERROR)
-    q += 1
-    Output(Mid(pos, v))
+      return CORRECT
+    i = v[1] - 1
+    j = v[2] - 1
+    if v[0] == "S":
+      case[i], case[j] = case[j], case[i]
+      Output(1)
+    if v[0] == "M":
+      cost += (10**8 + (j - i)) // (j - i + 1)
+      if cost > MAX_COST:
+        raise Error(COST_LIMIT_EXCEEDED_ERROR)
+      Output(case.index(min(case[i:j + 1])) + 1)
 
 
-def RunCases(cases, max_q):
-  Output("{} {} {}".format(len(cases), len(cases[0]), max_q))
-  tot_q = 0
+def RunCases(cases):
+  Output("{} {}".format(len(cases), len(cases[0])))
   for i, case in enumerate(cases, 1):
     try:
-      q = RunCase(case, max_q - tot_q)
+      RunCase(case)
       Output(CORRECT)
-      tot_q += q
     except Error as err:
       Output(WRONG)
       raise Error(CASE_ERROR(i, err))
@@ -135,27 +118,24 @@ def RunCases(cases, max_q):
   try:
     extra_input = input()
   except EOFError:
-    return tot_q
-  except Exception:  # pylint: disable=broad-except
+    return
+  except Exception:
     raise Error(EXCEPTION_AFTER_END_ERROR)
   raise Error(ADDITIONAL_INPUT_ERROR(extra_input[:100]))
 
 
 def main():
-  assert len(sys.argv) == 2, "Bad usage"
-  index = int(sys.argv[1])
-  random.seed(1234 + index)
-  assert index in (0, 1, 2)
+  random.seed(1025)
   try:
-    q = RunCases(GenCases(Ns[index]), Qs[index])
-    print(QUERIES_USED(q, Qs[index]), file=sys.stderr)
+    RunCases(CASES)
   except Error as err:
     print(str(err)[:1000], file=sys.stderr)
     sys.exit(1)
   except Exception as exception:
     Output(WRONG)
     print(
-        ("JUDGE_ERROR! Internal judge exception: {}".format(exception))[:1000],
+        ("JUDGE_ERROR! Internal judge exception: {}".format(exception)
+        )[:1000],
         file=sys.stderr)
     sys.exit(1)
 
