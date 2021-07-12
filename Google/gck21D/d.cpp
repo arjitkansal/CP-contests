@@ -101,7 +101,7 @@ int v(ll val) {
     return cnt;
 }
 void setval(int i, ll val) {
-    if(val%p==0) {
+    if(val < p || (val%p) == 0) {
         st.update(i,v(val));
         st1.update(i,0);
         st1cnt.update(i,0);
@@ -146,8 +146,8 @@ void solve() {
     }
 }
 int main() {
-    freopen("input.txt","r",stdin);
-    freopen("output1.txt","w",stdout);
+    //freopen("input.txt","r",stdin);
+    //freopen("output1.txt","w",stdout);
 
     ios_base::sync_with_stdio(false);
     cin.tie(0);
